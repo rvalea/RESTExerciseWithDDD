@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Users Maintenance App (Web API)</title>
+    <link href="Content/bootstrap.min.css" rel="stylesheet" />
+    <script src="Scripts/jquery-3.2.1.min.js"></script>
+    <script src="Scripts/bootstrap.min.js"></script>
+</head>
+<body>
+    <input type="hidden" id="useridhidden" value="0" />
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-6">
+                <h2>Get User (GET/id)</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6">
+                <table id="userTable"
+                       class="table table-bordered table-condensed table-striped">
+                    <thead>
+                        <tr>
+                            <th>Get</th>
+                            <th>User Id</th>
+                            <th>User Name</th>
+                            <th>Birthdate</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        User Information
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label for="userid">
+                                User Id
+                            </label>
+                            <input type="number"
+                                   class="form-control"
+                                   id="userid" />
+                        </div>
+                        <div class="form-group">
+                            <label for="username">
+                                User Name
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="username" />
+                        </div>
+                        <div class="form-group">
+                            <label for="birthdate">
+                                Birthdate
+                            </label>
+                            <input type="date"
+                                   class="form-control"
+                                   id="birthdate" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function () {
+            userList();
+        });
+
+        function userGet(ctl) {
+            // Get user id from data- attribute
+            var id = $(ctl).data("id");
+
+            // Store user id in hidden field
+            $("#useridhidden").val(id);
+
+            // Call Web API to get a user
+            $.ajax({
+                url: "api/users/" + id,
+                type: 'GET',
+                dataType: 'json',
+                success: function (user) {
+                    userToFields(user);
+                },
+                error: function (request, message, error) {
+                    handleException(request, message, error);
+                }
+            });
+        }
+
+        function userToFields(user) {
+            $("#userid").val(user.UserId);
+            $("#username").val(user.UserName);
+            $("#birthdate").val(user.BirthDate);
+        }
+
+        // Get all users to display
+        function userList() {
+            // Call Web API to get a list of users
+            $.ajax({
+                url: 'api/users/',
+                type: 'GET',
+                dataType: 'json',
+                success: function (users) {
+                    userListSuccess(users);
+                },
+                error: function (request, message, error) {
+                    handleException(request, message, error);
+                }
+            });
+        }
+
+        // Display all users returned from Web API call
+        function userListSuccess(users) {
+            // Iterate over the collection of data
+            $.each(users, function (index, user) {
+                // Add a row to the user table
+                userAddRow(user);
+            });
+        }
+
+        // Add user row to <table>
+        function userAddRow(user) {
+            // First check if a <tbody> tag exists, add one if not
+            if ($("#userTable tbody").length == 0) {
+                $("#userTable").append("<tbody></tbody>");
+            }
+
+            // Append row to <table>
+            $("#userTable tbody").append(
+              userBuildTableRow(user));
+        }
+
+        // Build a <tr> for a row of table data
+        function userBuildTableRow(user) {
+            var ret = "<tr>" +
+                  "<td>" +
+                    "<button type='button' " +
+                        "onclick='userGet(this);' " +
+                        "class='btn btn-default' " +
+                        "data-id='" + user.UserId + "'>" +
+                        "<span class='glyphicon glyphicon-edit' />" +
+                    "</button>" +
+                  "</td>" +
+                  "<td>" + user.UserId + "</td>" +
+                  "<td>" + user.UserName + "</td>" +
+                  "<td>" + user.BirthDate + "</td>" +
+                "</tr>";
+
+            return ret;
+        }
+
+        // Handle exceptions from AJAX calls
+        function handleException(request, message, error) {
+            var msg = "";
+
+            msg += "Code: " + request.status + "\n";
+            msg += "Text: " + request.statusText + "\n";
+            if (request.responseJSON != null) {
+                msg += "Message" + request.responseJSON.Message + "\n";
+            }
+
+            alert(msg);
+        }
+    </script>
+</body>
+</html>
